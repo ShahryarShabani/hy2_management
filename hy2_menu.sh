@@ -169,13 +169,12 @@ else
   sed -i '/User=/d' /etc/systemd/system/hysteria-server@.service
   systemctl daemon-reload
   if [[ $obf == "y" ]]; then
-  password=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 10)
+  password=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 12)
   yq --arg pass "$password"  '.obfs += {"type": "salamander", "salamander": {"password": $pass}}' $DIR/config.yaml -y | sponge $DIR/config.yaml.new
   fi
   if [[ $warp == "y" ]]; then
   wget -N -O $DIR/menu.sh https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash $DIR/menu.sh w
-  yq '.acl.inline += ["warp(geoip:google)","warp(geosite:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' $DIR/config.yaml -y | sponge $DIR/config.yaml.new
-  fi
+  yq '.acl.inline += ["warp(geoip:google)","warp(geosite:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' $DIR/config.yaml.new -y -i
   openssl ecparam -genkey -name prime256v1 -out ca.key
   openssl req -new -x509 -days 36500 -key ca.key -out ca.crt  -subj "/CN=bing.com"
   mv ca.key ca.crt /etc/hysteria/ 
