@@ -43,10 +43,12 @@ udpIdleTimeout: 120s
 acl:
   inline:
     - reject(all, udp/443)
-    - reject(geosite:all)
+    - reject(geosite:ir)
     - reject(geoip:ir)
-    - reject(geosite:ads)
+    - reject(geosite:category-ads-all)
     - reject(geoip:private)
+    - direct(geoip:facebook)
+  geoip: /etc/hysteria/geoip.dat
   geosite: /etc/hysteria/geosite.dat
 outbounds:
   - name: warp

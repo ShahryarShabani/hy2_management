@@ -174,15 +174,16 @@ else
   fi
   if [[ $warp == "y" ]]; then
   wget -N -O $DIR/menu.sh https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash $DIR/menu.sh w
-  yq '.acl.inline += ["warp(geoip:google)","warp(geoip:netflix)","warp(35.184.0.0/13)","direct(all)"]' $DIR/config.yaml -y | sponge $DIR/config.yaml.new
+  yq '.acl.inline += ["warp(geoip:google)","warp(geoip:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' $DIR/config.yaml -y | sponge $DIR/config.yaml.new
   fi
   openssl ecparam -genkey -name prime256v1 -out ca.key
   openssl req -new -x509 -days 36500 -key ca.key -out ca.crt  -subj "/CN=bing.com"
   mv ca.key ca.crt /etc/hysteria/ 
-  wget -O /etc/hysteria/geosite.dat https://github.com/bootmortis/iran-hosted-domains/releases/download/202402190026/iran.dat 
+  wget -O /etc/hysteria/geosite.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/download/202402200142/geosite.dat 
+  wget -O /etc/hysteria/geoip.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/download/202402200142/geoip.dat 
   cat $DIR/config.yaml.new
   sleep 2
-  read -p "Do you confirm config file ? [y/N]" confirm
+  read -p "Do you confirm config file ? [y/N]: " confirm
   if [[ $confirm == "y" ]]; then
   yq . $DIR/config.yaml.new -y | sponge /etc/hysteria/config.yaml
   systemctl enable hysteria-server.service
