@@ -1,0 +1,58 @@
+listen: :443
+tls:
+  cert: /etc/hysteria/ca.crt
+  key: /etc/hysteria/ca.key
+quic:
+  initStreamReceiveWindow: 26843545
+  maxStreamReceiveWindow: 26843545
+  initConnReceiveWindow: 67108864
+  maxConnReceiveWindow: 67108864
+  maxIdleTimeout: 4s
+  keepAlivePeriod: 4s
+  maxIncomingStreams: 1024
+  disablePathMTUDiscovery: false
+auth:
+  type: userpass
+  userpass:
+   test: test
+masquerade:
+  type: proxy
+  proxy:
+    url: https://abadis.ir/
+    rewriteHost: true
+resolver:
+  type: tcp
+  tcp:
+    addr: 8.8.8.8:53
+    timeout: 4s
+  udp:
+    addr: 8.8.4.4:53
+    timeout: 4s
+  tls:
+    addr: 1.1.1.1:853
+    timeout: 10s
+    sni: cloudflare-dns.com
+    insecure: true
+  https:
+    addr: 1.1.1.1:443
+    timeout: 10s
+    sni: cloudflare-dns.com
+    insecure: true
+disableUDP: false
+ignoreClientBandwidth: true
+udpIdleTimeout: 120s
+acl:
+  inline:
+    - reject(all, udp/443)
+    - reject(geosite:all)
+    - reject(geoip:ir)
+    - reject(geosite:ads)
+    - reject(geoip:private)
+  geosite: /etc/hysteria/geosite.dat
+outbounds:
+  - name: warp
+    type: socks5
+    socks5:
+      addr: 127.0.0.1:40000
+trafficStats:
+  listen: :7687
