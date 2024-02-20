@@ -155,7 +155,7 @@ if [ -x "$(command -v hysteria)" ]; then
   fi
 else
   version=$(dialog --title "Install Hysteria v2" --inputbox "Please enter a specific version or if you want the latest version don't : " 20 70 3>&1 1>&2 2>&3)
-  obfs=$(dialog --title "Install Hysteria v2" --inputbox "Do you want to use Obfuscation ? [y/N]: " 20 70 3>&1 1>&2 2>&3)
+  obf=$(dialog --title "Install Hysteria v2" --inputbox "Do you want to use Obfuscation ? [y/N]: " 20 70 3>&1 1>&2 2>&3)
   warp=$(dialog --title "Install Hysteria v2" --inputbox "Do you want to install WARP ? [y/N]: " 20 70 3>&1 1>&2 2>&3)
   #domain=$(dialog --title "Install Hysteria v2" --inputbox "Do you want to install WARP ? [y/N]: " 20 70 3>&1 1>&2 2>&3)
   clear
@@ -168,7 +168,7 @@ else
   sed -i '/User=/d' /etc/systemd/system/hysteria-server.service
   sed -i '/User=/d' /etc/systemd/system/hysteria-server@.service
   systemctl daemon-reload
-  if [[ $obfs == "y" ]]; then
+  if [[ $obf == "y" ]]; then
   password=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 10)
   yq --arg pass "$password"  '.obfs += {"type": "salamander", "salamander": {"password": $pass}}' $DIR/config.yaml -y | sponge $DIR/config.yaml.new
   fi
@@ -190,6 +190,7 @@ else
   systemctl start hysteria-server.service
   else
   nano $DIR/config.yaml.new
+  yq . $DIR/config.yaml.new -y | sponge /etc/hysteria/config.yaml
   systemctl enable hysteria-server.service
   systemctl start hysteria-server.service
   fi
