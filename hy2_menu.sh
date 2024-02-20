@@ -176,6 +176,9 @@ else
   wget -N -O $DIR/menu.sh https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash $DIR/menu.sh w
   yq '.acl.inline += ["warp(geoip:google)","warp(geoip:openai)","warp(geoip:netflix)","warp(35.184.0.0/13)","direct(all)"]' $DIR/config.yaml -y | sponge $DIR/config.yaml.new
   fi
+  openssl ecparam -genkey -name prime256v1 -out ca.key
+  openssl req -new -x509 -days 36500 -key ca.key -out ca.crt  -subj "/CN=bing.com"
+  mv ca.key ca.crt /etc/hysteria/ 
   wget -O /etc/hysteria/geosite.dat https://github.com/bootmortis/iran-hosted-domains/releases/download/202402190026/iran.dat 
   cat $DIR/config.yaml.new
   sleep 2
