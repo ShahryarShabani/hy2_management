@@ -298,29 +298,6 @@ fi
 }
 
 
-Update_prev_traffic() {
-prev_rx=$(jq -r .$ID.rx $DIR/hysteria.json)
-new_rx=$(curl 'http://127.0.0.1:7687/traffic' | jq -r .$ID.rx)
-prev_tx=$(jq -r .$ID.tx $DIR/hysteria.json)
-if [[ $prev_rx == "null" ]] ; then
-prev_rx=0
-fi
-if [[ $prev_tx == "null" ]] ; then
-prev_tx=0
-fi
-new_tx=$(curl 'http://127.0.0.1:7687/traffic' | jq -r .$ID.tx)
-# compare the rx values and update them if they are lower
-
-if [[ $new_rx != "null" ]] ; then
-# update the rx value of amirali in prev.json
-jq --arg name "$ID" --arg new_rx_edit "$((prev_rx + new_rx))" '.[$name].rx = $new_rx_edit' $DIR/hysteria.json | sponge $DIR/hysteria.json
-fi
-if [[ $new_tx != "null" ]] ; then
-jq --arg name "$ID" --arg new_tx_edit "$((prev_tx + new_tx))" '.[$name].tx = $new_tx_edit' $DIR/hysteria.json | sponge $DIR/hysteria.json
-fi
-}
-
-
 add_user() (
 
 Update_prev_traffic() {
@@ -411,15 +388,36 @@ systemctl restart hysteria-server.service
 )
 
 
-reset_hy() {
-IDs=$(yq '.auth.userpass | keys[]' /etc/hysteria/config.yaml)
-for ID in $IDs1
+reset_hy() (
+Update_prev_traffic() {
+prev_rx=$(jq -r .$ID.rx $DIR/hysteria.json)
+new_rx=$(curl 'http://127.0.0.1:7687/traffic' | jq -r .$ID.rx)
+prev_tx=$(jq -r .$ID.tx $DIR/hysteria.json)
+if [[ $prev_rx == "null" ]] ; then
+prev_rx=0
+fi
+if [[ $prev_tx == "null" ]] ; then
+prev_tx=0
+fi
+new_tx=$(curl 'http://127.0.0.1:7687/traffic' | jq -r .$ID.tx)
+# compare the rx values and update them if they are lower
+
+if [[ $new_rx != "null" ]] ; then
+# update the rx value of amirali in prev.json
+jq --arg name "$ID" --arg new_rx_edit "$((prev_rx + new_rx))" '.[$name].rx = $new_rx_edit' $DIR/hysteria.json | sponge $DIR/hysteria.json
+fi
+if [[ $new_tx != "null" ]] ; then
+jq --arg name "$ID" --arg new_tx_edit "$((prev_tx + new_tx))" '.[$name].tx = $new_tx_edit' $DIR/hysteria.json | sponge $DIR/hysteria.json
+fi
+}
+IDs=$(yq -r '.auth.userpass | keys[]' /etc/hysteria/config.yaml)
+for ID in $IDs
 do
 Update_prev_traffic
 done
 
 systemctl restart hysteria-server.service
-}
+)
 
 
 
