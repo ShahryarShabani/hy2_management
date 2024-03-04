@@ -56,6 +56,7 @@ jq --arg name "$ID" --arg new_rx_edit "0" '.[$name].rx = $new_rx_edit' $DIR/hyst
 jq --arg name "$ID" --arg new_tx_edit "0" '.[$name].tx = $new_tx_edit' $DIR/hysteria.json | sponge $DIR/hysteria.json
 systemctl restart hysteria-server.service
 echo "$ID Traffic is Finished"
+sleep 4
 else
 echo "$ID traffic is not finished"
 fi
@@ -78,6 +79,7 @@ jq --arg name "$ID" --arg new_rx_edit "0" '.[$name].rx = $new_rx_edit' $DIR/hyst
 jq --arg name "$ID" --arg new_tx_edit "0" '.[$name].tx = $new_tx_edit' $DIR/hysteria.json | sponge $DIR/hysteria.json
 systemctl restart hysteria-server.service
 echo "$ID Expired"
+sleep 4
 else
 echo "$ID not expired"
 fi
