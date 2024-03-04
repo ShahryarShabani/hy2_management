@@ -101,25 +101,29 @@ case $CHOICE in
           case $CHOICE in
 
                 "Install")clear
-			wget -N -O $DIR/menu.sh https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash $DIR/menu.sh w
+			if ! [ -x "$(command -v warp)" ]; then
+			wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash $DIR/menu.sh w
 			if [ $? -eq 0 ]; then
-			yq '.acl.inline += ["warp(geoip:google)","warp(geosite:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' ./etc/hysteria/config.yaml -i -y 
-			systemctl restart hysteria-server.service
+			yq '.acl.inline += ["warp(::0/0)","warp(geoip:google)","warp(geosite:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' /etc/hysteria/config.yaml -i -y 
+			reset_hy
 			sleep 15
 			systemctl status hysteria-server.service
+			fi
+		        else
+			echo "Warp already installed"
 			fi
                         ;;
 
                 "Uninstall")clear
-			bash $DIR/menu.sh u
+			    warp u
                         ;;
 	        
 		"Change Account Type")clear
-			bash $DIR/menu.sh a
+			    warp a
 			;;
 
 		"Status")clear
-			bash $DIR/menu.sh
+			warp
 			;;
 
                 "Back") NEED_KEY=0
@@ -127,8 +131,23 @@ case $CHOICE in
           esac
           ;;
 
-        *)clear;;
-  
+        4)OPTIONS=("Restart" ""
+          )
+
+          CHOICE=$(dialog --clear \
+              --title "$TITLE" \
+              --menu "$MENU" \
+              $HEIGHT $WIDTH $CHOICE_HEIGHT \
+              "${OPTIONS[@]}" \
+              3>&1 1>&2 2>&3)
+
+          case $CHOICE in
+
+                "Restart")clear
+			  reset_hy
+                        ;;
+          esac
+          ;;  
 esac
 if [[ $NEED_KEY == 1 ]]; then
     read -p "Press any key to return to menu" -n 1 key
@@ -174,7 +193,7 @@ else
   fi
   if [[ $warp == "y" ]]; then
   wget -N -O $DIR/menu.sh https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash $DIR/menu.sh w
-  yq '.acl.inline += ["warp(geoip:google)","warp(geosite:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' $DIR/config.yaml.new -y -i
+  yq '.acl.inline += ["warp(::0/0)","warp(geoip:google)","warp(geosite:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' $DIR/config.yaml.new -y -i
   fi
   openssl ecparam -genkey -name prime256v1 -out ca.key
   openssl req -new -x509 -days 36500 -key ca.key -out ca.crt  -subj "/CN=bing.com"
@@ -247,7 +266,13 @@ USERS=$(dialog --clear \
 clear
 if [[ $USERS != "" ]]; then
 rx_limit=$(jq -r .$USERS.rxlimit $DIR/hysteriadb.json)
+if [ -z $rx_limit ]; then
+rx_limit=0
+fi
 prev_traffic=$(jq -r .$USERS.rx $DIR/hysteria.json)
+if [[ $prev_traffic == "null" ]]; then
+prev_traffic=0
+fi
 new_traffic=$(curl 'http://127.0.0.1:7687/traffic' | jq -r .$USERS.rx)
 if [[ $new_traffic == "null" ]]; then
 new_traffic=0
@@ -259,6 +284,10 @@ fi
 link=$(jq -r .$USERS.link $DIR/hysteriadb.json)
 
 exp_date=$(jq -r ".$USERS.expdate" $DIR/hysteriadb.json)
+if [ -z $exp_date ]; then
+exp_date=0
+fi
+new_traffic=0
 start_date=$(jq -r ".$USERS.startdate" $DIR/hysteriadb.json)
 end_date=$(date -d "$start_date + $exp_date days" +%Y-%m-%d)
 daysleft=$(dateutils.ddiff today "$end_date" -f "%d Days Left")
@@ -268,6 +297,28 @@ user_info
 fi
 }
 
+
+Update_prev_traffic() {
+prev_rx=$(jq -r .$ID.rx $DIR/hysteria.json)
+new_rx=$(curl 'http://127.0.0.1:7687/traffic' | jq -r .$ID.rx)
+prev_tx=$(jq -r .$ID.tx $DIR/hysteria.json)
+if [[ $prev_rx == "null" ]] ; then
+prev_rx=0
+fi
+if [[ $prev_tx == "null" ]] ; then
+prev_tx=0
+fi
+new_tx=$(curl 'http://127.0.0.1:7687/traffic' | jq -r .$ID.tx)
+# compare the rx values and update them if they are lower
+
+if [[ $new_rx != "null" ]] ; then
+# update the rx value of amirali in prev.json
+jq --arg name "$ID" --arg new_rx_edit "$((prev_rx + new_rx))" '.[$name].rx = $new_rx_edit' $DIR/hysteria.json | sponge $DIR/hysteria.json
+fi
+if [[ $new_tx != "null" ]] ; then
+jq --arg name "$ID" --arg new_tx_edit "$((prev_tx + new_tx))" '.[$name].tx = $new_tx_edit' $DIR/hysteria.json | sponge $DIR/hysteria.json
+fi
+}
 
 
 add_user() (
@@ -350,7 +401,7 @@ add_users
 
 rm -f /tmp/names.tmp
 IDs=$(jq -r 'keys[]' $DIR/hysteriadb.json)
-for ID in $IDs1
+for ID in $IDs
 do
 Update_prev_traffic
 done
@@ -358,6 +409,17 @@ done
 systemctl restart hysteria-server.service
 
 )
+
+
+reset_hy() {
+IDs=$(yq '.auth.userpass | keys[]' /etc/hysteria/config.yaml)
+for ID in $IDs1
+do
+Update_prev_traffic
+done
+
+systemctl restart hysteria-server.service
+}
 
 
 
@@ -392,11 +454,15 @@ exit 1
 else
 apt-get install bc moreutils python3-pip jq dialog dateutils curl wget -y && pip install yq
 check=$(crontab -l | grep "$DIR/traffic_limit.sh > $DIR/traffic_limit.log")
-if [ -z $check ]; then 
+if [ -z $check ]; then
+crontab -l | { cat; echo "PATH="$PATH""; } | crontab -
 crontab -l | { cat; echo "*/5 * * * * $DIR/traffic_limit.sh > $DIR/traffic_limit.log"; } | crontab -
 fi
 if [ ! -f $DIR/hysteriadb.json ]; then
 echo '{}' > $DIR/hysteriadb.json
+fi
+if [ ! -f $DIR/hysteria.json ]; then
+echo '{}' > $DIR/hysteria.json
 fi
 if [ ! -f $DIR/config.yaml ]; then
 echo "config.yaml not exist"
