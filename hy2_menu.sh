@@ -104,7 +104,7 @@ case $CHOICE in
 			if ! [ -x "$(command -v warp)" ]; then
 			wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash $DIR/menu.sh w
 			if [ $? -eq 0 ]; then
-			yq '.acl.inline += ["warp(::/0)","warp(geoip:google)","warp(geosite:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' /etc/hysteria/config.yaml -i -y 
+			yq '.acl.inline += ["warp(geoip:google)","warp(geosite:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' /etc/hysteria/config.yaml -i -y 
 			reset_hy
 			sleep 15
 			systemctl status hysteria-server.service
@@ -193,7 +193,7 @@ else
   fi
   if [[ $warp == "y" ]]; then
   wget -N -O $DIR/menu.sh https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash $DIR/menu.sh w
-  yq '.acl.inline += ["warp(::/0)","warp(geoip:google)","warp(geosite:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' $DIR/config.yaml.new -y -i
+  yq '.acl.inline += ["warp(geoip:google)","warp(geosite:netflix)","warp(35.184.0.0/13)","warp(geosite:spotify)","warp(geosite:google)","warp(geosite:openai)","warp(geoip:openai)","direct(all)"]' $DIR/config.yaml.new -y -i
   fi
   openssl ecparam -genkey -name prime256v1 -out ca.key
   openssl req -new -x509 -days 36500 -key ca.key -out ca.crt  -subj "/CN=bing.com"
