@@ -47,7 +47,6 @@ acl:
     - reject(geoip:ir)
     - reject(geosite:category-ads-all)
     - reject(geoip:private)
-    - direct(geoip:facebook)
   geoip: /etc/hysteria/geoip.dat
   geosite: /etc/hysteria/geosite.dat
 outbounds:
