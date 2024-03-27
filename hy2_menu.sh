@@ -198,7 +198,7 @@ else
   openssl ecparam -genkey -name prime256v1 -out ca.key
   openssl req -new -x509 -days 36500 -key ca.key -out ca.crt  -subj "/CN=bing.com"
   mv ca.key ca.crt /etc/hysteria/ 
-  release=$(curl -s https://api.github.com/repos/Chocolate4U/Iran-sing-box-rules/releases/latest | jq -r '.tag_name')     
+  release=$(curl -s https://api.github.com/repos/Chocolate4U/Iran-v2ray-rules/releases/latest | jq -r '.tag_name')     
   wget -O /etc/hysteria/geosite.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/download/$release/geosite.dat
   wget -O /etc/hysteria/geoip.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/download/$release/geoip.dat 
   cat $DIR/config.yaml.new
