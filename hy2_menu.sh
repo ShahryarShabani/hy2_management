@@ -350,7 +350,7 @@ sni=$(dialog --inputbox "Please enter the SNI for $name: " 20 70 "eset.com" 3>&1
 port=$(dialog --inputbox "Please enter hysteria listening port: " 20 70 443 3>&1 1>&2 2>&3)
 #read -p "Please enter your SNI: " sni
 #read -p "Enter port: " port
-ip=$(ip -4 addr show ens3 | awk '/inet/ {print $2}' | cut -d/ -f1)
+ip=$(ip route get 1.2.3.4 | awk '{print $7}')
 port=${port:-443}
 pass=$(yq -r .auth.userpass.$name /etc/hysteria/config.yaml)
 obf_pass=$(yq -r '.obfs.salamander.password' /etc/hysteria/config.yaml)
