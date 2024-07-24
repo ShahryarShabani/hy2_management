@@ -39,10 +39,9 @@ resolver:
     insecure: true
 disableUDP: false
 ignoreClientBandwidth: true
-udpIdleTimeout: 120s
+udpIdleTimeout: 30s
 acl:
   inline:
-    - reject(all, udp/443)
     - reject(geosite:ir)
     - reject(geoip:ir)
     - reject(geosite:category-ads-all)
