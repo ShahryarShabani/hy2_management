@@ -48,7 +48,7 @@ acl:
     - reject(geoip:private)
   geoip: /etc/hysteria/geoip.dat
   geosite: /etc/hysteria/geosite.dat
-outbound:
+outbounds:
   - name: direct
     type: direct
   - name: warp
