@@ -187,9 +187,10 @@ else
   sed -i '/User=/d' /etc/systemd/system/hysteria-server.service
   sed -i '/User=/d' /etc/systemd/system/hysteria-server@.service
   systemctl daemon-reload
+  cat $DIR/config.yaml | sponge $DIR/config.yaml.new
   if [[ $obf == "y" ]]; then
   password=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 12)
-  yq --arg pass "$password"  '.obfs += {"type": "salamander", "salamander": {"password": $pass}}' $DIR/config.yaml -y | sponge $DIR/config.yaml.new
+  yq --arg pass "$password"  '.obfs += {"type": "salamander", "salamander": {"password": $pass}}' $DIR/config.yaml.new -y -i
   fi
   if [[ $warp == "y" ]]; then
   wget -N -O $DIR/menu.sh https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash $DIR/menu.sh w
