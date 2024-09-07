@@ -355,8 +355,17 @@ ip=$(ip route get 1.2.3.4 | awk '{print $7}')
 port=${port:-443}
 pass=$(yq -r .auth.userpass.$name /etc/hysteria/config.yaml)
 obf_pass=$(yq -r '.obfs.salamander.password' /etc/hysteria/config.yaml)
+domain=$(yq -r '.acme.domains[0]' /etc/hysteria/config.yaml)
 clear
+if [[ $domain != "null" ]]; then
 if [[ $obf_pass != "null" ]]; then
+link="hy2://$name:$pass@$domain:$port/?obfs=salamander&obfs-password=$obf_pass#Hi-$name"
+else
+link="hy2://$name:$pass@$domain:$port/#Hi-$name"
+fi
+fi
+if [[ $obf_pass != "null" ]]; then
+if [[ $domain == "null" ]]; then
 link="hy2://$name:$pass@$ip:$port?obfs=salamander&obfs-password=$obf_pass&insecure=1&sni=$sni#Hi-$name"
 jq --arg name "$name" --arg generated "$link" '.[$name].link = $generated' $DIR/hysteriadb.json | sponge $DIR/hysteriadb.json
 echo "hy2://$name:$pass@$ip:$port?obfs=salamander&obfs-password=$obf_pass&insecure=1&sni=$sni#Hi-$name"
@@ -366,6 +375,7 @@ link="hy2://$name:$pass@$ip:$port?insecure=1&sni=$sni#Hi-$name"
 jq --arg name "$name" --arg generated "$link" '.[$name].link = $generated' $DIR/hysteriadb.json | sponge $DIR/hysteriadb.json
 echo "hy2://$name:$pass@$ip:$port?insecure=1&sni=$sni#Hi-$name" 
 #dialog --msgbox "hy2://$name:$pass@$ip:$port?insecure=1&sni=$sni#Hi-$name" 20 200 2> /dev/null
+fi
 fi
 else
 echo "User $name not Created please check logs"
@@ -436,12 +446,21 @@ ip=$(ip -4 addr show ens3 | awk '/inet/ {print $2}' | cut -d/ -f1)
 port=${port:-443}
 pass=$(yq -r .auth.userpass.$name /etc/hysteria/config.yaml)
 obf_pass=$(yq -r '.obfs.salamander.password' /etc/hysteria/config.yaml)
+domain=$(yq -r '.acme.domains[0]' /etc/hysteria/config.yaml)
+if [[ $domain != "null" ]]; then
 if [[ $obf_pass != "null" ]]; then
+echo "hy2://$name:$pass@$domain:$port/?obfs=salamander&obfs-password=$obf_pass#Hi-$name"
+else
+echo "hy2://$name:$pass@$domain:$port/#Hi-$name"
+fi
+fi
+if [[ $obf_pass != "null" ]]; then
+if [[ $domain == "null" ]]; then
 echo "hy2://$name:$pass@$ip:$port?obfs=salamander&obfs-password=$obf_pass&insecure=1&sni=$sni#Hi-$name"
 else
 echo "hy2://$name:$pass@$ip:$port?insecure=1&sni=$sni#Hi-$name"
 fi
-
+fi
 }
 
 
